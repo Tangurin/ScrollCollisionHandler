@@ -1,0 +1,26 @@
+{
+  "name": "ScrollCollisionHandler",
+  "main": "ScrollCollisionHandler.js",
+  "homepage": "https://github.com/Tangurin/ScrollCollisionHandler",
+  "authors": [
+    "Albert <albert@engvie.se>"
+  ],
+  "description": "JavaScript Class for events when scroll collides with elements",
+  "keywords": [
+    "ScrollCollisionHandler"
+  ],
+  "dependencies": {
+    "jquery": ">=1.7.1",
+    "ScrollHandler": "https://github.com/Tangurin/ScrollHandler.git",
+    "ResizeHandler": "https://github.com/Tangurin/ResizeHandler.git"
+  },
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
