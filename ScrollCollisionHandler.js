@@ -262,7 +262,7 @@
             ScrollCollisionHandler.setWindowHeights();
             for (var offset in ScrollCollisionHandler.offsets) {
                 for (var index in ScrollCollisionHandler.offsets[offset]) {
-                    var $element = ScrollCollisionHandler.offsets[offset][i];
+                    var $element = ScrollCollisionHandler.offsets[offset][index];
                     var options = $element.options;
                     if (options.removeOnResize === true || options.refreshOnResize === true) {
                         ScrollCollisionHandler.removeElement(offset, index);
