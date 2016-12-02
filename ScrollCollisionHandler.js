@@ -42,7 +42,7 @@
             }
             if (ScrollCollisionHandler.initialized === true) {
                 ScrollCollisionHandler.addMultipleElements(elements);
-                return false;
+                return true;
             }
 
             var $window = $(window);
@@ -86,11 +86,14 @@
             $element.passedVisible = false;
 
             var markupOptions = {
-                delay: $element.data('delay') || 0
+                delay: ($element.data('delay') || 0),
+                removeWhenVisible: ($element.data('removewhenvisible') ? true : false),
+                removeWhenPassed: ($element.data('removewhenpassed') ? true : false),
             };
             var elementOptions = $element.options || {};
             var options = $.extend({}, ScrollCollisionHandler.defaultOptions, markupOptions, elementOptions);
             $element.options = options;
+
             var offset = options.collideOffset;
 
             if (options.collideOnElementHeight === true) {
@@ -101,14 +104,15 @@
                 offset = $element.offset().top + ScrollCollisionHandler.calculateExtraOffset($element, options);
             }
 
+            offset = Math.round(offset);
+
             //Store offset
             ScrollCollisionHandler.addOffset(offset);
             //Store element in the offset
             ScrollCollisionHandler.offsets[offset].push($element);
-            
             var index = ScrollCollisionHandler.offsets[offset].length - 1;
             ScrollCollisionHandler.offsets[offset][index].index = index;
-            ScrollCollisionHandler.offsets[offset][index].offset = offset;
+            ScrollCollisionHandler.offsets[offset][index].storedOffset = offset;
 
             if (ScrollCollisionHandler.isVisible($element)) {
                 ScrollCollisionHandler.runViaDelay($element, 'runAlreadyVisible');
@@ -116,13 +120,16 @@
                 ScrollCollisionHandler.runViaDelay($element, 'runNotAlreadyVisible');
             }
         },
-        removeElement: function(offset, index) {
+        removeElement: function($element) {
+            var offset = $element.storedOffset;
+            var index = $element.index;
             if(typeof ScrollCollisionHandler.offsets[offset] != 'undefined') {
                 if (typeof ScrollCollisionHandler.offsets[offset][index] != 'undefined') {
-                    ScrollCollisionHandler.offsets[offset].splice(index, 1);
+                    delete ScrollCollisionHandler.offsets[offset][index]
                 }
 
-                if (ScrollCollisionHandler.offsets[offset].length == 0) {
+                var keys = Object.keys(ScrollCollisionHandler.offsets[offset]);
+                if (keys.length == 0) {
                     delete ScrollCollisionHandler.offsets[offset];
                 }
             }
@@ -147,6 +154,7 @@
                 for (var offset in ScrollCollisionHandler.offsets) {
                     for (var i in ScrollCollisionHandler.offsets[offset]) {
                         var $element = ScrollCollisionHandler.offsets[offset][i];
+
                         if($element.passed) {
                             if(scrollTop < offset) {
                                 ScrollCollisionHandler.runViaDelay($element, 'runBefore');
@@ -180,26 +188,6 @@
             }
             ScrollCollisionHandler[method]($element);
         },
-        runAlreadyVisible: function($element) {
-            $element.alreadyVisible = true;
-            var options = $element.options;
-            $element.addClass(options.staticVisibleClass);
-            if (typeof options.callbacks.alreadyVisible == 'function') {
-                options.callbacks.alreadyVisible($element);
-            }
-            
-            if ($element.options.removeWhenAlreadyVisible === true) {
-                ScrollCollisionHandler.removeElement($element.offset, $element.index);
-            }
-        },
-        runNotAlreadyVisible: function($element) {
-            $element.alreadyVisible = false;
-            var options = $element.options;
-
-            if (typeof options.callbacks.notAlreadyVisible == 'function') {
-                options.callbacks.notAlreadyVisible($element);
-            }
-        },
         runBefore: function($element) {
             var options = $element.options;
             var callbacks = options.callbacks;
@@ -225,16 +213,40 @@
                 callbacks.after($element);
             }
             if ($element.options.removeWhenPassed === true) {
-                ScrollCollisionHandler.removeElement($element.offset, $element.index);
+                ScrollCollisionHandler.removeElement($element);
+            }
+        },
+        runAlreadyVisible: function($element) {
+            $element.alreadyVisible = true;
+            var options = $element.options;
+            
+            $element.addClass(options.staticVisibleClass);
+
+            if (typeof options.callbacks.alreadyVisible == 'function') {
+                options.callbacks.alreadyVisible($element);
+            }
+            
+            if ($element.options.removeWhenAlreadyVisible === true) {
+                ScrollCollisionHandler.removeElement($element);
+            }
+        },
+        runNotAlreadyVisible: function($element) {
+            $element.alreadyVisible = false;
+            var options = $element.options;
+
+            if (typeof options.callbacks.notAlreadyVisible == 'function') {
+                options.callbacks.notAlreadyVisible($element);
             }
         },
         runBeforeVisible: function($element) {
             var options = $element.options;
             var callbacks = options.callbacks;
             $element.passedVisible = false;
+
             if (options.visibleClass) {
                 $element.removeClass(options.visibleClass);
             }
+
             if (typeof callbacks.beforeVisible == 'function') {
                 callbacks.beforeVisible($element);
             }
@@ -245,7 +257,6 @@
             $element.passedVisible = true;
 
             $element.addClass(options.staticVisibleClass);
-            
             if (options.visibleClass) {
                 $element.addClass(options.visibleClass);
             }
@@ -255,7 +266,7 @@
             }
 
             if ($element.options.removeWhenVisible === true) {
-                ScrollCollisionHandler.removeElement($element.offset, $element.index);
+                ScrollCollisionHandler.removeElement($element);
             }
         },
         onResized: function() {
@@ -265,7 +276,7 @@
                     var $element = ScrollCollisionHandler.offsets[offset][index];
                     var options = $element.options;
                     if (options.removeOnResize === true || options.refreshOnResize === true) {
-                        ScrollCollisionHandler.removeElement(offset, index);
+                        ScrollCollisionHandler.removeElement($element);
                     }
 
                     if (options.refreshOnResize === true) {
