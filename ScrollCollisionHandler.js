@@ -293,14 +293,6 @@
         },
     };
 
-    if ($('.scrollCollisionDetection').length > 0) {
-        var elements = [];
-        $('.scrollCollisionDetection').each(function() {
-            elements.push($(this));
-        });
-        ScrollCollisionHandler.initialize(elements);
-    }
-
     window.ScrollCollisionHandler = ScrollCollisionHandler;
 })();
 
